@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+	<Expanded>0</Expanded>
+	<Child>
+		<value.first>单元配置</value.first>
+		<value.second>
+			<Expanded>1</Expanded>
+			<Child>
+				<value.first>[0]  KV-N40      R000/R500</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[1]  KV-N8EXR    R1000/R1500 -----</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[2]  KV-NC4AD    R8000   DM100</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[3]  KV-NC4AD    R9000   DM200</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+		</value.second>
+	</Child>
+</Root>

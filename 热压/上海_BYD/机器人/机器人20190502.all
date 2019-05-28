@@ -1,0 +1,1136 @@
+[PGM]
+NAME=MAIN
+PGN=1
+''''''''''''''''''''''''''''深圳市卓誉自动化科技有限公司''''''''''''''''''''''''''''''
+''''''''''点位说明''''''''''
+'P1：进料等待位         P2：1#热压等待位       P3：2#热压等待位       P4：3#冷压等待位       P5：出料等待位
+'P6：进料上位           P7：进料工作位         P8：1#热压工作位       P9：2#热压工作位       P10:冷压工作位
+'P11：出料上位          P12：出料工作位        P13:维修位             P14:初始位             P19:#1热压到冷压过渡点      
+'P20:右手系变左手系过渡点                      P21:左手系变右手系过渡点
+'
+''''''''''''''''''''''''''''''初始化''''''''''''''''''''''''''''''
+'ON ERROR GOTO *ERR_vision
+CLOSE GP1 
+'*link:                
+DELAY 100
+OPEN GP1 
+*START_:
+V_F%=1     '复位速度1%
+SEN$=""     '定义接收字符串变量
+REC$=""     '定义发送字符串变量
+V_M%=1     '初始化手动速度
+V_A%=1     '初始化自动速度
+ASPEED 1
+SGI9=0      '任务代码
+SGI10=0     '机器人任务记录
+POSITION=0      '机器人位置记录代码
+'X_Here!=0.0
+'Y_Here!=0.0
+MOTOR ON    '电机上电
+''''''''''''''''''''''''''''''复位''''''''''''''''''''''''''''''
+P100=WHRXY          '读取机器人当前坐标位置
+'PX!=LOC1(P100)          '将读取到机器人当前坐标位置的X轴数值赋值给PX
+'PY!=LOC2(P100)          '将读取到机器人当前坐标位置的Y轴数值赋值给PY
+'PZ!=LOC3(P100)          '将读取到机器人当前坐标位置的Z轴数值赋值给PZ
+''''''''''复位区域判断''''''''''
+*Rest:
+Hand%=ARMCND            '判断手系
+IF Hand%=1 THEN         '右手系状态
+    IF ABS(ABS(LOC1(P100))-ABS(LOC1(P14)))<=2.0 AND ABS(ABS(LOC2(P100))-ABS(LOC2(P14)))<=2.0 THEN    '在待机位
+        MOVE L,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)< -40.0 AND LOC2(P100)> 620.0 THEN
+        MOTOR OFF
+        GOTO *Rest
+    ENDIF
+    IF ABS(ABS(LOC1(P100))-ABS(LOC1(P20)))<=1.0 AND ABS(ABS(LOC2(P100))-ABS(LOC2(P20)))<=1.0 THEN     '在切换手系位
+        MOVE L,P20,P4,DS=V_F%
+        WAIT ARM
+        MOVE L,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    '---------
+    IF LOC1(P100)<=LOC1(P1)+2.0 AND LOC1(P100)>=LOC1(P1)-2.0 AND LOC2(P100)<=LOC2(P1)+2.0 THEN    '在进料位内
+        DRIVE(3,LOC3(P6)),DS=V_F%
+        MOVE L,P1,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC2(P100)<=LOC2(P8)+50.0 AND LOC2(P100)>=LOC2(P8)-50.0 AND LOC1(P100)<=LOC1(P2)-1.0 THEN 'AND ABS(ABS(LOC4(P100))-ABS(LOC4(P8)))<=3.0 THEN    '在热压1#内
+        DRIVE(3,LOC3(P28)),DS=V_F%
+       'DRIVE(4,LOC4(P8)),DS=V_F%
+        MOVE L,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)<=LOC1(P10)+50.0 AND LOC1(P100)>=LOC1(P10)-50.0 AND LOC2(P100)>=LOC2(P4)-2.0 THEN 'AND ABS(ABS(LOC4(P100))-ABS(LOC4(P10)))<=3.0 THEN    '在冷压位内
+        DRIVE(3,LOC3(P30)),DS=V_F%
+        'DRIVE(4,LOC4(P10)),DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    '---------
+    IF LOC1(P100)>=LOC1(P20) AND LOC2(P100)>=LOC2(P20) THEN          '正在切换手系状态
+        MOVE L,P20,P4,DS=V_F%
+        WAIT ARM
+        MOVE L,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)>=LOC1(P4) THEN                    '在切手系与冷压等待位之间
+        MOVE L,P4,DS=V_F%
+        WAIT ARM
+        MOVE L,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)< LOC1(P4) THEN
+        IF LOC2(P100)< LOC2(P2) THEN                '在热压1#与进料位之间
+            DRIVE(3,LOC3(P6)),DS=V_F%
+            MOVE L,P14,DS=V_F%
+            WAIT ARM
+            POSITION=14
+            SGI10=14
+            GOTO *ROBOT_MAIN
+          ELSEIF LOC1(P100)> LOC1(P2) AND LOC2(P100)>LOC2(P2) THEN                                     '在热压1#与冷压位之间
+             MOVE L,P19,P2,P14,DS=V_F%
+             WAIT ARM
+             POSITION=14
+             SGI10=14
+             GOTO *ROBOT_MAIN
+        ENDIF
+    ENDIF
+ENDIF
+'-----
+'-----
+IF Hand%=2 THEN         '左手系状态
+    '---------
+    IF LOC1(P100)>470.0  AND LOC2(P100)<-180.0 THEN
+        MOTOR OFF
+        GOTO *Rest
+    ENDIF
+    IF ABS(ABS(LOC1(P100))-ABS(LOC1(P21)))<=3.0 AND ABS(ABS(LOC2(P100))-ABS(LOC2(P21)))<=3.0 THEN  '在切换手系位
+        MOVE L,P21,DS=V_F%
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,DS=V_F%
+        WAIT ARM
+        MOVE L,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)>=LOC1(P3)+1.0 AND LOC2(P100)<=LOC2(P9)+50.0 AND LOC2(P100)>=LOC2(P9)-50.0 THEN 'AND ABS(ABS(LOC4(P100))-ABS(LOC4(P9)))<=3.0 THEN    '在热压2#内
+        DRIVE(3,LOC3(P29)),DS=V_F%
+        'DRIVE(4,LOC4(P9)),DS=V_F%
+        MOVE L,P3,P21,DS=V_F%
+        WAIT ARM
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC1(P100)<=LOC1(P5)+2.0 AND LOC1(P100)>=LOC1(P5)-2.0 AND LOC2(P100)<=LOC2(P5)+2.0 THEN    '在出料位内
+        DRIVE(3,LOC3(P11)),DS=V_F%
+        MOVE L,P5,P3,P21,DS=V_F%
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    '---------
+    IF LOC1(P100)>=LOC1(P21) AND LOC2(P100)>=LOC2(P21) THEN          '正在切换手系状态
+        MOVE L,P21,DS=V_F%
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,DS=V_F%
+        WAIT ARM
+        MOVE L,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC2(P100)> LOC2(P3) AND LOC1(P100)> LOC1(P21) THEN
+        MOVE L,P21,DS=V_F%
+        WAIT ARM
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+    IF LOC2(P100)< LOC2(P5) THEN                    '在热压2#与出料位之间
+        DRIVE(3,LOC3(P5)),DS=V_F%
+        MOVE L,P5,P3,P21,DS=V_F%
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+      ELSE                                          '在热压2#与切换手系之间
+        MOVE L,P3,P21,DS=V_F%
+        WAIT ARM
+        MOVE P,P20,DS=V_F%
+        MOVE L,P4,P19,P2,P14,DS=V_F%
+        WAIT ARM
+        POSITION=14
+        SGI10=14
+        GOTO *ROBOT_MAIN
+    ENDIF
+ENDIF
+GOTO *Rest
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+'
+''''''''''Main''''''''''
+*ROBOT_MAIN:
+'''''''''''''''''''通讯端口关闭再打开''''''''''''''''''''
+'-----DO Output-------
+DO2(3)=1 '下料定位安全区
+DO2(4)=1 '#1热压安全区
+DO2(5)=1 '#2热压安全区
+DO2(6)=1 '#3冷压安全区
+DO2(7)=1 '上料定位安全区
+'---------------------
+START <ROBOT_ACTION>,T2,32     '开启动作任务
+'----------------机器人接受PLC数据模块-----------
+*ROBOT_REC_DATA:
+DELAY 2
+SEND GP1 TO REC$
+SELECT CASE  REC$
+       CASE  "RDPt"                   '收到PLC读取指令
+           GOTO *ROBOT_SEN_DATA 
+       CASE ELSE 
+             LENGTH%=LEN(REC$)  
+             IF   LENGTH% <> 4 THEN
+                GOTO *ROBOT_REC_DATA 
+             ENDIF 
+              A_ASPEED$=MID$(REC$,1,2) 
+             IF  A_ASPEED$="V=" THEN
+                 SSPD%=VAL(MID$(REC$,3,2)) 
+                 ASPEED  SSPD%                '------------------------存疑
+                 SEND REC$ TO GP1  '空字符串
+                 GOTO *ROBOT_REC_DATA 
+               ENDIF                 
+            CALL *COMMOM(REC$) 
+            GOTO *ROBOT_REC_DATA
+END SELECT
+SUB *COMMOM(PLC_DATA$)
+    R_NUM!=VAL(PLC_DATA$)
+    RR_NUM%=R_NUM!
+    SGI9=RR_NUM%
+    SEND PLC_DATA$ TO GP1           '回复PLC我收到数据
+END SUB
+'----------------机器人给PLC发送数据模块-----------
+*ROBOT_SEN_DATA:
+IF SGI9=0 & SGI10=14 THEN
+    SEND "Pt14" TO GP1
+    GOTO *ROBOT_REC_DATA
+ENDIF
+''''''''''''''''''''''''''''''----------------------------------------存疑
+IF SGI9=SGI10  THEN
+    S_G%=SGI10 
+    ZS$=STR$(S_G%)
+    AA%=LEN(ZS$)
+    IF AA%<4 THEN
+        ZS$="0"+ZS$
+    ENDIF
+    ZS_ZS$=MID$(ZS$,3,2)
+    S_D$="Pt"+ZS_ZS$
+    SEND S_D$ TO GP1
+   ELSE
+       SEND "Pt00" TO GP1
+    ENDIF
+GOTO *ROBOT_REC_DATA
+'*ERR_vision:
+'IF ERR=&H000E00E7 THEN RESUME *link  '确认是否发生了端口打开失败的错误代码
+'IF ERR=&H000E01F4 THEN RESUME *link  '确认是否发生了数据发送错误的错误代码
+'IF ERR=&H000E00E6 THEN RESUME *link  '确认是否发生了指定端口运行中错误代码
+'ON ERROR GOTO 0                      '显示错误并停止执行
+NAME=ROBOT_ACTION
+PGN=2
+''''''''''''''''''机器人动作程序'''''''''''''''''''''
+*ROBOT_ACTION:
+'-----------------初始位至进料待机位请求1401-------------
+IF SGI9=1401 AND POSITION=14 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P1                     '
+    WAIT ARM
+    POSITION=1                     '记录位置信息
+    SGI10=1401
+    'WHILE -1
+        'IF SGI9<>SGI10 THEN
+            GOTO *ROBOT_ACTION     '
+        'ENDIF
+    'WEND
+ENDIF
+'-----------------初始位至1#HP热压待机位请求1402-------------
+IF SGI9=1402 AND POSITION=14 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P2                     '
+    WAIT ARM
+    POSITION=2                     '记录位置信息
+    SGI10=1402
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------初始位至2#HP热压待机位请求1403-------------
+IF SGI9=1403 AND POSITION=14 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P2,P19,P4,P20,P21,P3                  '
+    WAIT ARM
+    POSITION=3                    '记录位置信息
+    SGI10=1403
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------初始位至3#CP冷压待机位请求1404-------------
+IF SGI9=1404 AND POSITION=14 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P2,P19,P4                  '
+    WAIT ARM
+    POSITION=4                    '记录位置信息
+    SGI10=1404
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------初始位至出料待机位请求1405-------------
+IF SGI9=1405 AND POSITION=14 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P2,P19,P4,P20,P21,P3
+    MOVE P,P5                  '
+    WAIT ARM
+    POSITION=5                   '记录位置信息
+    SGI10=1405
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'-----------------进料待机位至初始位请求0114-------------
+IF SGI9=0114 AND POSITION=1 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P14
+    WAIT ARM
+    POSITION=14                  '记录位置信息
+    SGI10=0114
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+ '-----------------进料待机位至进料工作位0107-------------
+IF SGI9=0107 AND POSITION=1 THEN  '任务代码=1201时 
+    SGI10=0 
+    DO2(7)=0  '上料定位安全区                     
+    MOVE P,P6
+    MOVE L,P7                    '
+    WAIT ARM
+    POSITION=07                    '记录位置信息
+    SGI10=0107
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'-----------------进料工作位至初始位0714-------------
+IF SGI9=0714 AND POSITION=7 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P6
+    MOVE P,P1
+    DO2(7)=1  '上料定位安全区  
+    MOVE P,P14                    '
+    WAIT ARM
+    POSITION=14                    '记录位置信息
+    SGI10=0714
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------进料工作位至1#HP热压等待位请求0702-------------
+IF SGI9=0702 AND POSITION=7 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P6
+    MOVE P,P1
+    DO2(7)=1  '上料定位安全区 
+    MOVE P,P14
+    MOVE P,P2                   '
+    WAIT ARM
+    POSITION=2                    '记录位置信息
+    SGI10=0702
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------进料工作位至2#HP热压等待位请求0703-------------
+IF SGI9=0703 AND POSITION=7 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P6
+    MOVE P,P1
+    DO2(7)=1  '上料定位安全区  
+    MOVE P,P14,P2,P19,P4,P20,P21
+    MOVE P,P3                   '
+    WAIT ARM
+    POSITION=3                    '记录位置信息
+    SGI10=0703
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------进料工作位至#3冷压待机位请求0704-------------
+IF SGI9=0704 AND POSITION=7 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P6
+    MOVE P,P1
+    DO2(7)=1  '上料定位安全区 
+    MOVE P,P14,P2,P19
+    MOVE P,P4                    '
+    WAIT ARM
+    POSITION=4                    '记录位置信息
+    SGI10=0704
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------进料工作位至进料待机位请求0701-------------
+IF SGI9=0701 AND POSITION=7 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P6
+    MOVE P,P1,CONT                     '
+    WAIT ARM
+    POSITION=1                   '记录位置信息
+    SGI10=0701
+    DO2(7)=1  '上料定位安全区  
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------#1热压待机位至初始位请求0214-------------
+IF SGI9=0214 AND POSITION=2 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P14,CONT
+    WAIT ARM
+    POSITION=14                   '记录位置信息
+    SGI10=0214
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------1#HP热压待机位至1#HP热压工作位请求0208-------------
+IF SGI9=0208 AND POSITION=2 THEN  '任务代码=1201时
+    DO2(4)=0 '#1热压安全位 
+    SGI10=0                      
+    MOVE L,P28,P8
+    WAIT ARM
+    POSITION=8                    '记录位置信息
+    SGI10=0208
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------#1热压待机位至#3冷压待机位请求0204-------------
+IF SGI9=0204 AND POSITION=2 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P19
+    MOVE P,P4
+    WAIT ARM
+    POSITION=4                    '记录位置信息
+    SGI10=0204
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------#2热压待机位至初始位请求0314-------------
+IF SGI9=0314 AND POSITION=3 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P21,P20,P4,P19,P2
+    MOVE P,P14
+    WAIT ARM
+    POSITION=14                    '记录位置信息
+    SGI10=0314
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------2#HP热压待机位至2#HP热压工作位请求0309-------------
+IF SGI9=0309 AND POSITION=3 THEN  '任务代码=1201时 
+    DO2(5)=0 '#2热压安全位 
+    SGI10=0                      
+    MOVE L,P29,P9
+    WAIT ARM
+    POSITION=9                   '记录位置信息
+    SGI10=0309
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'-----------------2#HP热压待机位至#3冷压待机位请求0304-------------
+IF SGI9=0304 AND POSITION=3 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P21,P20,P4
+    WAIT ARM
+    POSITION=4                   '记录位置信息
+    SGI10=0304
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------#3冷压待机位至初始位请求0414-------------
+IF SGI9=0414 AND POSITION=4 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P19,P2
+    MOVE P,P14
+    WAIT ARM
+    POSITION=14                   '记录位置信息
+    SGI10=0414
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'-----------------3#CP冷压待机位至3#CP冷压工作位请求0410-------------
+IF SGI9=0410 AND POSITION=4 THEN  '任务代码=1201时 
+    DO2(6)=0 '#3冷压安全位 
+    SGI10=0                      
+    MOVE L,P30,P10
+    WAIT ARM
+    POSITION=10                   '记录位置信息
+    SGI10=0410
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'-----------------3#CP冷压待机位至出料待机位请求0405-------------
+IF SGI9=0405 AND POSITION=4 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P20,P21,P3
+    MOVE P,P5
+    WAIT ARM
+    POSITION=5                  '记录位置信息
+    SGI10=0405
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- 出料工作位至初始位请求1214------------
+IF SGI9=1214 AND POSITION=12 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P11
+    MOVE P,P5
+    DO2(3)=1 '出料定位安全位
+    MOVE P,P3,P21,P20,P4,P19,P2
+    MOVE P,P14
+    WAIT ARM
+    POSITION=14                 '记录位置信息
+    SGI10=1214
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- 出料工作位至3#CP冷压等待位请求1204-----------
+IF SGI9=1204 AND POSITION=12 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P11
+    MOVE P,P5
+    DO2(3)=1 '出料定位安全位 
+    MOVE P,P3,P21,P20,P4
+    WAIT ARM
+    POSITION=4               '记录位置信息
+    SGI10=1204
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'----------------- 出料工作位至出料待机位请求1205------------
+IF SGI9=1205 AND POSITION=12 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P11
+    MOVE P,P5
+    WAIT ARM
+    POSITION=5                 '记录位置信息
+    SGI10=1205
+    DO2(3)=1 '出料定位安全位 
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- #1热压工作位至#1热压待机位请求0802------------
+IF SGI9=0802 AND POSITION=8 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P28,P2
+    WAIT ARM
+    POSITION=2                 '记录位置信息
+    SGI10=0802
+    DO2(4)=1 '#1热压安全位 
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- #2热压工作位至#2热压待机位请求0903------------
+IF SGI9=0903 AND POSITION=9 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P29,P3
+    WAIT ARM
+    POSITION=3                 '记录位置信息
+    SGI10=0903
+    DO2(5)=1 '#2热压安全位 
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- #3冷压工作位至#3冷压待机位请求1004------------
+IF SGI9=1004 AND POSITION=10 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE L,P30,P4
+    WAIT ARM
+    POSITION=4                 '记录位置信息
+    SGI10=1004
+    DO2(6)=1 '#3冷压安全位 
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- 出料等待位至出料工作位请求0512------------
+IF SGI9=0512 AND POSITION=5 THEN  '任务代码=1201时 
+    DO2(3)=0 '出料定位安全位 
+    SGI10=0                      
+    MOVE P,P11
+    MOVE L,P12
+    WAIT ARM
+    POSITION=12                 '记录位置信息
+    SGI10=0512
+    GOTO *ROBOT_ACTION     '
+ ENDIF
+'----------------- 出料等待位至初始位请求0514------------
+IF SGI9=0514 AND POSITION=5 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P3,P21,P20,P4,P19,P2
+    MOVE P,P14
+    WAIT ARM
+    POSITION=14                 '记录位置信息
+    SGI10=0514
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'----------------- 出料等待位至#1热压待机位请求0502------------
+IF SGI9=0502 AND POSITION=5 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P3,P21,P20,P4,P19
+    MOVE P,P2
+    WAIT ARM
+    POSITION=2              '记录位置信息
+    SGI10=0502
+    GOTO *ROBOT_ACTION     '
+ENDIF
+'----------------- 出料等待位至#2热压待机位请求0503------------
+IF SGI9=0503 AND POSITION=5 THEN  '任务代码=1201时 
+    SGI10=0                      
+    MOVE P,P3
+    WAIT ARM
+    POSITION=3              '记录位置信息
+    SGI10=0503
+    GOTO *ROBOT_ACTION     '
+ENDIF
+GOTO *ROBOT_ACTION
+
+[PNT]
+P1=-309.678 353.032 87.452 156.953 0.000 0.000 1 0 0
+P2=-220.973 474.966 31.450 69.897 0.000 0.000 1 0 0
+P3=514.817 47.321 31.470 -113.349 0.000 0.000 2 0 0
+P4=230.419 385.965 31.450 -21.820 0.000 0.000 1 0 0
+P5=412.716 -142.092 87.452 -202.080 0.000 0.000 2 0 0
+P6=-408.998 178.393 87.452 156.953 0.000 0.000 1 0 0
+P7=-408.998 178.394 137.452 156.953 0.000 0.000 1 0 0
+P8=-398.843 603.342 35.450 69.897 0.000 0.000 1 0 0
+P9=687.661 -77.837 36.450 -109.806 0.000 0.000 2 0 0
+P10=327.086 582.635 35.450 -23.899 0.000 0.000 1 0 0
+P11=341.571 -268.233 87.452 -202.313 0.000 0.000 2 0 0
+P12=341.571 -268.233 137.452 -202.313 0.000 0.000 2 0 0
+P13=0.000 0.000 0.000 0.000 0.000 0.000 2 0 0
+P14=-190.506 377.769 87.452 110.280 0.000 0.000 1 0 0
+P19=-27.093 351.162 31.451 4.278 0.000 0.000 1 0 0
+P20=397.987 166.736 31.451 -56.454 0.000 0.000 1 0 0
+P21=397.987 166.736 31.451 -56.454 0.000 0.000 2 0 0
+P28=-398.843 603.342 31.450 69.897 0.000 0.000 1 0 0
+P29=691.655 -72.073 31.450 -110.758 0.000 0.000 2 0 0
+P30=327.090 582.635 31.450 -23.900 0.000 0.000 1 0 0
+P100=-190.506 377.769 87.452 110.280 0.000 0.000 1 0 0
+
+[PCM]
+PC1=进料等待位
+PC2=1#热压等待位
+PC3=2#热压等待位
+PC4=3#冷压等待位
+PC5=出料等待位
+PC6=进料上位
+PC7=进料工作位
+PC8=1#热压工作位
+PC9=2#热压工作位
+PC10=3#冷压工作位
+PC11=出料上位
+PC12=出料工作位
+PC13=维修位
+PC14=初始位
+PC19=1热压到冷压过渡
+PC20=右变左过渡点
+PC21=左变右过渡点
+PC28=1#热压工作上位
+PC29=2#热压工作上位
+PC30=3#冷压工作上位
+
+[PRM]
+'C1:V1.61,R0318-V1.001-V1.14,R0020/V1.14,R0020
+'C1:340,L,I,2.1MB,00-04-C6-15-13-8F
+'C1:DIO_NS,V1.02////
+'PRM(0)
+\CNTTYP\
+C1=340
+\YCEADR\
+C1=0
+\DRVASGN\
+R1A=101,102,103,104,0,0
+R2A=0,0,0,0,0,0
+R3A=0,0,0,0,0,0
+R4A=0,0,0,0,0,0
+\RBTNUM\
+R1=2126
+\AXSNUM\
+R1A=2126,2126,2126,2126
+\ATTRIB\
+R1A=0,0,0,0
+\STACK\
+R1A=0,1,2,3
+\CORDAT\
+R1A=1,2,3,4
+'PRM(1)
+/INCMOD/
+RC=0
+/MOVIMD/
+RC=0
+/MOVTMD/
+RC=0
+/SRVOON/
+RC=0
+/SEQFLG/
+RC=0
+#SAFEMODE#
+RC=-1
+/RUNINOIC/
+RC=0
+/RSTATRUN/
+RC=0
+/RSTATBOT/
+RC=0
+/CRNTPG/
+RC=1
+/MAINPG/
+RC=1
+/STDPRN/
+RC=1
+#EMGTIM#
+RC=1000
+#EMGTIM2#
+RC=300
+/DBGSTAMD/
+RC=0
+/BRKSTPMD/
+RC=1
+/SFTONACO/
+RC=1
+/SFTONCRD/
+RC=3
+'PRM(2)
+/WEIGHT/
+R1=20
+/ORGORD/
+R1=312456
+/RORIEN/
+R1=0
+/ARMTYP/
+R1=1
+#CPVMAX#
+R1=1600
+#CPACCL#
+R1=6000
+/CPACRAT/
+R1=100
+#CPCMPCRV#
+R1=12
+#CPCMPVL#
+R1=1000
+#ZONCTRL#
+R1=1
+/SCRINR/
+R1=0
+#SCRACC#
+R1=37
+#SCRVEL#
+R1=80
+#MINRAD#
+R1=5000
+#CERAD1#
+R1=30000
+#CERAD2#
+R1=5000
+#SPLMT1#
+R1=10
+#SPLMT2#
+R1=1
+#CSTMRBT#
+R1=0
+\ASPEED\
+R1=1
+'PRM(3)
+/PLMT+/
+R1A=480000,546134,327680,819200
+/PLMT-/
+R1A=-480000,-546134,-820,-819200
+/ACCEL/
+R1A=100,100,100,100
+/DECRAT/
+R1A=100,100,100,100
+/AXSTIP/
+R1A=0,0,0,0
+/TOLE/
+R1A=80,80,80,80
+/OUTPOS/
+R1A=2000,2000,2000,2000
+/CONTPLS/
+R1A=8000,8000,8000,8000
+/ARCHP1/
+R1A=9999999,9999999,9999999,9999999
+/ARCHP2/
+R1A=9999999,9999999,9999999,9999999
+/PSHSPD/
+R1A=10,10,10,10
+/PSHFRC/
+R1A=100,100,100,100
+/PSHTIME/
+R1A=1000,1000,1000,1000
+/PSHJGSP/
+R1A=0,0,0,0
+/PSHMTD/
+R1A=0,0,0,0
+/MANACC/
+R1A=100,100,100,100
+/ORGVEL1/
+R1A=200,200,200,200
+/ORGVEL2/
+R1A=50,50,50,50
+/ORGMVS/
+R1A=20,20,20,20
+/ORGMVP/
+R1A=0,0,0,0
+/ORGSFT/
+R1A=0,0,0,0
+/DOFSET/
+R1A=0,0,0,0
+/ORGMTD/
+R1A=1,1,2,1
+/ORGDIR/
+R1A=0,0,0,0
+/MOTDIR/
+R1A=0,0,1,1
+/SABSRCH/
+R1A=0,0,0,0
+/ARMLEN/
+R1A=400000,400000,0,0
+/OFFSET/
+R1A=-325607,62,0,0
+/AXSWEI/
+R1A=0,0,0,0
+'PRM(4)
+#WTHBRK#
+R1A=0,0,1,0
+#LSCLEN#
+R1A=0,0,0,0
+#LSCRNG#
+R1A=0,0,0,0
+#ACCRAD#
+R1A=800,800,2700,500
+#DECRAD#
+R1A=1100,1100,2250,700
+#CMPCRV#
+R1A=15,15,14,15
+#CMPVEL#
+R1A=1500,1500,2100,5100
+#ACCPTN#
+R1A=1,1,0,1
+#DECPTN#
+R1A=9,9,0,6
+#VERDIR#
+R1A=0,0,0,0
+#VERACC#
+R1A=0,0,0,0
+#ATLACL#
+R1A=0,0,0,191
+#ATLVCL#
+R1A=0,0,0,0
+#ATLJMR#
+R1A=10,10,10,20
+#ATLVF#
+R1A=0,0,0,0
+#KPPMOV#
+R1A=18,18,18,18
+#KPP#
+R1A=18,18,18,18
+#KPCHTM#
+R1A=0,0,0,0
+#KFF#
+R1A=0,0,0,0
+#KFFLPF#
+R1A=0,0,0,0
+#KHFRQ1#
+R1A=0,0,0,0
+#KHFRQ2#
+R1A=0,0,0,0
+#KVP#
+R1A=9000,6600,4500,5100
+#KVI#
+R1A=9000,6600,4500,5100
+#KVRHLD#
+R1A=100,100,100,100
+#KVRPOS#
+R1A=100,100,100,100
+#KVCHTM#
+R1A=0,0,0,0
+#AL2DOF#
+R1A=0,0,0,0
+#KVLLMT#
+R1A=50,50,80,80
+#KVRESV#
+R1A=0,0,0,0
+#KVREEV#
+R1A=1500,2000,1900,3000
+#TRQFRQ#
+R1A=100,100,100,100
+#TFRQHLD#
+R1A=100,100,100,100
+#MF1TYP#
+R1A=0,0,0,0
+#MF1FRQ1#
+R1A=0,0,0,0
+#MF1FRQ2#
+R1A=0,0,0,0
+#MF2TYP#
+R1A=0,0,0,0
+#MF2FRQ1#
+R1A=0,0,0,0
+#MF2FRQ2#
+R1A=0,0,0,0
+#MF3TYP#
+R1A=0,0,0,0
+#MF3FRQ1#
+R1A=0,0,0,0
+#MF3FRQ2#
+R1A=0,0,0,0
+#MF4TYP#
+R1A=0,0,0,0
+#MF4FRQ1#
+R1A=0,0,0,0
+#MF4FRQ2#
+R1A=0,0,0,0
+#OBSNMI#
+R1A=0,0,0,0
+#OBSGIN#
+R1A=0,0,0,0
+#OBSFF1#
+R1A=0,0,0,0
+#OBSFF2#
+R1A=0,0,0,0
+#KIP#
+R1A=41,32,69,30
+#KII#
+R1A=28,22,31,24
+#KIF#
+R1A=5,5,5,5
+#KILLMT#
+R1A=100,100,100,100
+#KIRESV#
+R1A=0,0,0,0
+#KIREEV#
+R1A=0,0,0,0
+#VELLMT#
+R1A=5500,6500,5000,7650
+#CRFSTD#
+R1A=559,530,382,311
+#CRFLMT#
+R1A=1357,1098,1008,488
+#LEAD#
+R1A=360000,360000,20000,360000
+#GEAR#
+R1A=80000,80000,1000,50000
+#NMOTOR#
+R1A=316,315,313,347
+#MTRTYP#
+R1A=0,0,0,0
+#ENCTYP#
+R1A=0,0,0,0
+#ENCPLS#
+R1A=16384,16384,16384,16384
+#MPTYPE#
+R1A=0,0,0,0
+#MPPTCH#
+R1A=4096,4096,4096,4096
+#IS#
+R1A=560,530,380,320
+#IP#
+R1A=1650,1470,1120,870
+#KT#
+R1A=440,270,340,230
+#RP#
+R1A=33,27,77,60
+#LP#
+R1A=16,13,27,25
+#JM#
+R1A=1090,610,640,810
+#CTTYPE#
+R1A=2,2,2,1
+#PWMFRQ#
+R1A=13,13,13,13
+#IDLIMT#
+R1A=33,0,0,0
+#IDSTVL#
+R1A=4200,6500,4400,7200
+#IDEDVL#
+R1A=5500,0,0,0
+#ORGACC#
+R1A=100,100,100,100
+#ORGCUR#
+R1A=1117,820,492,488
+#ORGDVEL#
+R1A=20,20,20,20
+#ORGTIM#
+R1A=200,200,200,200
+#ORGRTP#
+R1A=4,4,1,4
+#ORGPHS#
+R1A=0,0,0,0
+#DOGLEN#
+R1A=200000,200000,200000,200000
+#POLSFT#
+R1A=0,0,0,0
+#POLLVL#
+R1A=0,0,0,0
+#EMGMOD#
+R1A=1,1,2,0
+#EMGACC#
+R1A=0,0,1700,0
+#DUALMOD#
+R1A=0,0,0,0
+#DUALDIR#
+R1A=0,0,0,0
+#DUALORG#
+R1A=0,0,0,0
+#DSLVPOS#
+R1A=0,0,0,0
+#KDVP#
+R1A=10,10,10,10
+#KDPP#
+R1A=10,10,10,10
+#KDPHLD#
+R1A=0,0,0,0
+#KDPCHT#
+R1A=0,0,0,0
+#PTPCTRL#
+R1A=0,0,0,0
+#PTPCHG#
+R1A=200,200,200,200
+#RCKPLS#
+R1A=20,20,20,20
+#MINVEL#
+R1A=5,5,5,5
+#PVBRK#
+R1A=0,0,0,0
+#QPBAND#
+R1A=0,0,0,0
+#SRVDTM#
+R1A=100,100,100,100
+#BKDLTM#
+R1A=0,0,0,0
+#BKONTM#
+R1A=0,0,0,0
+#BKOFTM#
+R1A=0,0,0,0
+#MBRKVL#
+R1A=2000,2000,2000,2000
+#MOLCRT#
+R1A=559,530,382,311
+#MOLTIM#
+R1A=300,300,300,300
+#MOLVEL#
+R1A=0,0,0,0
+#MOLMLT#
+R1A=24,21,26,22
+#DOLCRT#
+R1A=2400,2400,2400,1200
+#DOLTIM#
+R1A=10,10,10,10
+#DOLVEL#
+R1A=0,0,0,0
+#DOLMLT#
+R1A=28,28,28,28
+#OVRCRT#
+R1A=1628,1317,1209,814
+#OCWTIM#
+R1A=2,2,2,2
+#CERLVL#
+R1A=814,658,604,407
+#CERTIM#
+R1A=2,2,2,2
+#OVRVEL#
+R1A=6050,7150,5500,8415
+#OVLTIM#
+R1A=2,2,2,2
+#VERLVL#
+R1A=3025,3575,2750,4207
+#VERTIM#
+R1A=3,3,3,3
+#PERLVL#
+R1A=117479,138839,106799,163403
+#PERTIM#
+R1A=3,3,3,3
+#DPERLVL#
+R1A=16384,16384,16384,16384
+#DPERTIM#
+R1A=3,3,3,3
+#COLVEL#
+R1A=5,5,5,5
+#COLTIM#
+R1A=50,50,50,50
+#DRVCTRL#
+R1A=0,0,0,0
+#VLCNMSPD#
+R1A=20,20,20,20
+#VLCNSVL#
+R1A=0,0,0,0
+#MVLCNTRT#
+R1A=0,0,0,0
+#CSTMAXS#
+R1A=0,0,0,0
+'PRM(5)
+/EMGCDO/
+RC=1
+/ERPORT/
+RC=0
+/BTALRM/
+RC=0
+/DIOCAN/
+RC=1
+/RESCDO/
+RC=0
+/DI17MD/
+RC=0
+/IOORGMD/
+RC=0
+/IOORGIN/
+RC=2
+/IOORGOUT/
+RC=0
+/IOSRVOUT/
+RC=0
+'PRM(6)
+/OPTENBL/
+C1O=1,1,1,1
+/DIOID/
+RC=1234
+
+[GEP]
+GP1
+MODE=0
+IPADRS=192.168.88.24
+PORT=24
+EOL=0
+TYPE=0
+
+[END]
