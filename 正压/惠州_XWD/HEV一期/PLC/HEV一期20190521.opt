@@ -6,8 +6,8 @@ BEGIN
   BarID:=59422;
   Bars:=6;
   Bar[0]:=0;
-  Bar[1]:=59414;
-  Bar[2]:=59415;
+  Bar[1]:=59415;
+  Bar[2]:=59414;
   Bar[3]:=59416;
   Bar[4]:=59412;
   Bar[5]:=0;
@@ -55,7 +55,7 @@ BEGIN
   Pos:="1 5";
   Docking:=1;
   MRUDockID:=0;
-  MRUDockPos:="1 5 1366 142";
+  MRUDockPos:="1 5 1009 185";
   MRUFloatStyle:=4;
   MRUFloatPos:="-2147483648 0";
   Style:=36756;
@@ -64,7 +64,7 @@ BEGIN
   MDIChild:=0;
   PctWidth:="1000000";
   MRUFloat:="300 180";
-  MRUHorzDock:="1365 137";
+  MRUHorzDock:="1008 180";
   MRUVertDock:="300 180";
   MRUDockingState:=0;
   DockingStyle:=61440;
@@ -89,7 +89,7 @@ BEGIN
   MDIChild:=0;
   PctWidth:="430799";
   MRUFloat:="300 180";
-  MRUHorzDock:="432 177";
+  MRUHorzDock:="432 220";
   MRUVertDock:="300 180";
   MRUDockingState:=0;
   DockingStyle:=61440;
@@ -114,7 +114,7 @@ BEGIN
   MDIChild:=0;
   PctWidth:="500000";
   MRUFloat:="300 180";
-  MRUHorzDock:="501 41";
+  MRUHorzDock:="501 84";
   MRUVertDock:="300 180";
   MRUDockingState:=0;
   DockingStyle:=61440;
@@ -129,7 +129,7 @@ BEGIN
   Pos:="0 -2";
   Docking:=1;
   MRUDockID:=0;
-  MRUDockPos:="0 -2 346 403";
+  MRUDockPos:="0 -2 346 360";
   MRUFloatStyle:=4;
   MRUFloatPos:="-2147483648 0";
   Style:=8084;
@@ -139,7 +139,7 @@ BEGIN
   PctWidth:="1000000";
   MRUFloat:="300 180";
   MRUHorzDock:="300 180";
-  MRUVertDock:="346 405";
+  MRUVertDock:="346 362";
   MRUDockingState:=0;
   DockingStyle:=61440;
   TypeID:=0;
@@ -154,7 +154,7 @@ BEGIN
   MRUWidth:=300;
   Docking:=1;
   MRUDockID:=59422;
-  MRUDockPos:="1 5 1366 142";
+  MRUDockPos:="1 5 1366 185";
   MRUFloatStyle:=8192;
   MRUFloatPos:="1 527";
   Style:=36756;
@@ -163,7 +163,7 @@ BEGIN
   MDIChild:=0;
   PctWidth:="1000000";
   MRUFloat:="300 180";
-  MRUHorzDock:="1365 137";
+  MRUHorzDock:="1365 180";
   MRUVertDock:="300 180";
   MRUDockingState:=0;
   DockingStyle:=61440;
@@ -179,38 +179,21 @@ ProjectTree:=
 BEGIN
  Item[0]:=0;
  Item[1]:=2;
- Item[2]:=163;
- Item[3]:=198;
- Item[4]:=217;
- Item[5]:=228;
- Item[6]:=246;
- Item[7]:=258;
- ItemCount:=8;
- Sumcheck:=317;
- Selected:=263;
- ScrollPos:="0 39";
+ Item[2]:=115;
+ Item[3]:=116;
+ Item[4]:=150;
+ ItemCount:=5;
+ Sumcheck:=244;
+ Selected:=165;
+ ScrollPos:="0 18";
 END;
 Frame[0]:=
 BEGIN
- Norm:="0025 0025 1076 0332";
+ Norm:="0025 0025 0864 0397";
  Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.出料伺服机构.段.工站复位!工站复位";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-   Yscroll:=54;
-  END;
-  nViews:=1;
- END;
-END;
-Frame[1]:=
-BEGIN
- Norm:="0050 0050 1101 0357";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.Common!Common";
- Type:=7;
+ Path:="C:\Users\Administrator\Desktop\diankong\正压\惠州_XWD\HEV一期\PLC\HEV一期20190521.cxp";
+ Access:="PROJECT:!新工程.设备.FB source program";
+ Type:=8;
  Views:=
  BEGIN
   View[0]:=
@@ -220,97 +203,9 @@ BEGIN
   nViews:=1;
  END;
 END;
-Frame[2]:=
+Frame[1]:=
 BEGIN
- Norm:="0075 0075 1126 0382";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.Common.段.动作延时!动作延时";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-  END;
-  nViews:=1;
- END;
-END;
-Frame[3]:=
-BEGIN
- Norm:="0125 0125 1176 0432";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.进料拉带机构.段.进料手动!进料手动";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-   Yscroll:=11;
-  END;
-  nViews:=1;
- END;
-END;
-Frame[4]:=
-BEGIN
- Norm:="0075 0075 1076 0382";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.出料伺服机构.段.Main!Main";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-   Yscroll:=283;
-  END;
-  nViews:=1;
- END;
-END;
-Frame[5]:=
-BEGIN
- Norm:="0100 0100 0989 0378";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.氦检机构.段.外部输出!外部输出";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-   Yscroll:=447;
-  END;
-  nViews:=1;
- END;
-END;
-Frame[6]:=
-BEGIN
- Norm:="0125 0125 1014 0403";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.复测腔体机构.段.外部输出!外部输出";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-   Yscroll:=59;
-  END;
-  nViews:=1;
- END;
-END;
-Frame[7]:=
-BEGIN
- Norm:="0000 0000 0889 0278";
- Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.NG缓存机构.段.外部输出!外部输出";
- Type:=1;
- Views:=
- BEGIN
-  View[0]:=
-  BEGIN
-  END;
-  nViews:=1;
- END;
-END;
-Frame[8]:=
-BEGIN
- Norm:="0025 0025 0914 0303";
+ Norm:="0050 0050 0964 0310";
  Min:="-001 -001";
  Access:="PROGRAM:新工程.设备.FB source program.程序.氦检机构.段.Main!Main";
  Type:=1;
@@ -318,28 +213,43 @@ BEGIN
  BEGIN
   View[0]:=
   BEGIN
-   Yscroll:=413;
+   Yscroll:=267;
   END;
   nViews:=1;
  END;
 END;
-Frame[9]:=
+Frame[2]:=
 BEGIN
- Max:=true;
- Norm:="0100 0100 1151 0407";
+ Norm:="0075 0075 0989 0335";
  Min:="-001 -001";
- Access:="PROGRAM:新工程.设备.FB source program.程序.Common.段.传感器延时!传感器延时";
+ Access:="PROGRAM:新工程.设备.FB source program.程序.Main.段.Main!Main";
  Type:=1;
  Views:=
  BEGIN
   View[0]:=
   BEGIN
-   Yscroll:=624;
+   Yscroll:=46;
   END;
   nViews:=1;
  END;
 END;
-nFrames:=10;
+Frame[3]:=
+BEGIN
+ Max:=true;
+ Norm:="0000 0000 0835 0368";
+ Min:="-001 -001";
+ Access:="PROGRAM:新工程.设备.FB source program.程序.氦检机构.段.外部输出!外部输出";
+ Type:=1;
+ Views:=
+ BEGIN
+  View[0]:=
+  BEGIN
+   Yscroll:=261;
+  END;
+  nViews:=1;
+ END;
+END;
+nFrames:=4;
 WatchWindow:=
 BEGIN
  NumWatch:=3;
