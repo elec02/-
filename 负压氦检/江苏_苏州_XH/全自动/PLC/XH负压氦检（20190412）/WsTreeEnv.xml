@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Root>
+	<Expanded>0</Expanded>
+	<Child>
+		<value.first>单元配置</value.first>
+		<value.second>
+			<Expanded>1</Expanded>
+			<Child>
+				<value.first>[0]  KV-7500</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+					<Child>
+						<value.first>EtherNet/IP   R30000  DM10000</value.first>
+						<value.second>
+							<Expanded>0</Expanded>
+						</value.second>
+					</Child>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[1]  KV-MC40V    R34000  DM10300</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[2]  KV-L2*V     R48000  DM12800</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[3]  KV-AD40     R5000   DM11900</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[4]  KV-C64X*    R000    -----</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[5]  KV-C32X*    R400    -----</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[6]  KV-C64T*    R10000  -----</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>[7]  KV-C32T*    R10400  -----</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+			<Child>
+				<value.first>切换单元配置</value.first>
+				<value.second>
+					<Expanded>0</Expanded>
+				</value.second>
+			</Child>
+		</value.second>
+	</Child>
+</Root>
