@@ -184,7 +184,7 @@ BEGIN
  ItemCount:=4;
  Sumcheck:=144;
  Selected:=110;
- ScrollPos:="0 11";
+ ScrollPos:="0 9";
 END;
 Frame[0]:=
 BEGIN
