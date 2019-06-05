@@ -1,0 +1,730 @@
+[PGM]
+NAME=ND_BAOMO
+PGN=1
+'------------------------------------------------------------------------包膜（雅马哈）
+MOTOR ON
+DELAY 50
+'----------------------------------------------------------启动子程序（雅马哈当前位置）
+DELAY 200
+START <DQWZ_IO_CELECT>,T2,33
+START <DQWZ_TCP_CELECT>,T3,34
+GOTO *RESET_YMH
+'---------------------------------------------------------------PLC发送的动作指令处理
+*PLC_TO_GP1_OPERATIVE:
+DO2(1) = 0  '----------------------------------------------------------雅马哈忙信号关  
+WAIT DI2(0) = 1 OR DI2(1) = 1 OR DI2(5) = 1 OR DI2(6) = 1
+*REN_WU: 
+SPEED 65
+        IF DI2(0) = 1 & MO1(0) = 1 THEN  '取1#工位
+           DO2(1) = 1 '-----------------------------------------------------------雅马哈忙信号开
+           DRIVE(3,0.00)
+           MOVE L,P3
+           MOVE L,P4
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P3
+           MOVE L,P10,CONT  
+           MOVE L,P5
+           WAIT DI2(2) '到贴胶位安全
+           MOVE L,P6
+           DO2(2) = 1 'TO PLC 贴胶开始
+           WAIT DI2(3) '贴胶完成信号
+           DO2(2) = 0
+           MOVE L,P5
+           MOVE L,P7
+           WAIT DI2(4) = 1 '到下料位安全
+           MOVE L,P8
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P7
+           MOVE L,P10
+           GOTO *PLC_TO_GP1_OPERATIVE 
+         ENDIF              
+       IF DI2(1) = 1  & MO1(0) = 1  THEN  '取2#工位
+           DO2(1) = 1 '-----------------------------------------------------------雅马哈忙信号开
+           DRIVE(3,0.00)
+           MOVE L,P1
+           MOVE L,P2
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P1
+           MOVE L,P10,CONT  
+           MOVE L,P5
+           WAIT DI2(2) '到贴胶位安全
+           MOVE L,P6
+           DO2(2) = 1 'TO PLC 贴胶开始
+           WAIT DI2(3) '贴胶完成信号
+           DO2(2) = 0
+           MOVE L,P5
+           MOVE L,P7
+           WAIT DI2(4) = 1 '到下料位安全
+           MOVE L,P8
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P7
+           MOVE L,P10
+           GOTO *PLC_TO_GP1_OPERATIVE 
+        ENDIF
+        IF DI2(5) = 1  & MO1(0) = 1 & DI2(6) = 0 THEN  'PLC_TO_雅马哈到贴胶工位贴胶 
+           DO2(1) = 1 '-----------------------------------------------------------雅马哈忙信号开   
+           DRIVE(3,0.00)
+           MOVE L,P10
+           MOVE L,P5
+           WAIT DI2(2) '到贴胶位安全
+           MOVE L,P6
+           DO2(2) = 1 'TO PLC 贴胶开始
+           WAIT DI2(3) '贴胶完成信号
+           DO2(2) = 0
+           MOVE L,P5
+           MOVE L,P7
+           WAIT DI2(4) = 1 '到下料位安全
+           MOVE L,P8
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P7
+           MOVE L,P10
+           GOTO *PLC_TO_GP1_OPERATIVE 
+        ENDIF 
+        IF DI2(6) = 1  & MO1(0) = 1 & DI2(5) = 0  THEN  'PLC_TO_雅马哈到下料位放料
+           DO2(1) = 1 '-----------------------------------------------------------雅马哈忙信号开      
+           DRIVE(3,0.00)
+           MOVE L,P10
+           MOVE L,P5,CONT  
+           MOVE L,P7
+           WAIT DI2(4) = 1 '到下料位安全
+           MOVE L,P8
+           DO2(3) = 1 '雅马哈夹爪动作
+           WAIT DI2(7) = 1
+           DO2(3) = 0
+           MOVE L,P7
+           MOVE L,P10 
+           GOTO *PLC_TO_GP1_OPERATIVE        
+         ENDIF                     
+GOTO *PLC_TO_GP1_OPERATIVE
+'--------------------------------------------------------------------------------复位  
+*RESET_YMH:
+MOTOR ON
+GP_1_TO_PLC$ = ""
+DO2(1) = 1 '雅马哈忙信号开
+SPEED 10
+A = ARMCND
+P29999 = WHRXY
+PX_2% = LOC1(P29999)
+PY_2% = LOC2(P29999)
+PZ_2% = LOC3(P29999)
+PU_2% = LOC4(P29999)
+DRIVE(3,0.00)
+IF A = 1 & PX_2% < 800.00 & PY_2% > 180.00 & PX_2% > 500.00 & PY_2% < 630.00 THEN
+    MOVE L,P7
+    MOVE L,P10
+    GOTO *PLC_TO_GP1_OPERATIVE
+ENDIF
+IF A = 1 & PX_2% <= 500.00 & PX_2% >= -700.00 THEN
+    MOVE L,P29998
+    MOVE L,P10
+    GOTO *PLC_TO_GP1_OPERATIVE
+ENDIF
+IF A = 1 & PX_2% < -400.00 & PY_2% < 600.00 & PX_2% > -550.00 & PY_2% > -300.00  THEN
+   MOVE L,P29998
+   MOVE L,P10 
+   GOTO *PLC_TO_GP1_OPERATIVE
+ENDIF
+MOTOR OFF
+HALT
+'---------------------------------------------------------------发生柔性报警时，关伺服
+*CHUO_WU:
+IF DI3(0) = 1 THEN
+    MOTOR OFF  
+ENDIF
+HALT
+NAME=DQWZ_IO_CELECT
+PGN=2
+*YMH_DANG_QIAN_WEI_ZHI:
+WAIT MO1(0) = 1
+DO2(4) = 1 
+WAIT MO1(0) = 0
+DO2(4) = 0 
+GOTO *YMH_DANG_QIAN_WEI_ZHI
+NAME=DQWZ_TCP_CELECT
+PGN=3
+'----------------
+*SEND_PLC: '读当前位置
+A% = 1.5 '位置偏差
+'读当前位置
+P29001 = WHRXY
+PX_2% = LOC1(P29001)
+PY_2% = LOC2(P29001)
+PZ_2% = LOC3(P29001)
+PU_2% = LOC4(P29001)
+'给PLC雅马哈在上位信号
+IF PZ_2% <= 2 THEN
+    DO2(0) = 1
+    ELSE
+    DO2(0) = 0
+ENDIF
+'读设定点位(P1)
+PX_201% = LOC1(P1)
+PY_201% = LOC2(P1)
+PZ_201% = LOC3(P1)
+PU_201% = LOC4(P1)
+'读设定点位(P2)
+PX_202% = LOC1(P2)
+PY_202% = LOC2(P2)
+PZ_202% = LOC3(P2)
+PU_202% = LOC4(P2)
+'读设定点位(P3)
+PX_203% = LOC1(P3)
+PY_203% = LOC2(P3)
+PZ_203% = LOC3(P3)
+PU_203% = LOC4(P3)
+'读设定点位(P4)
+PX_204% = LOC1(P4)
+PY_204% = LOC2(P4)
+PZ_204% = LOC3(P4)
+PU_204% = LOC4(P4)
+'读设定点位(P5)
+PX_205% = LOC1(P5)
+PY_205% = LOC2(P5)
+PZ_205% = LOC3(P5)
+PU_205% = LOC4(P5)
+'读设定点位(P6)
+PX_206% = LOC1(P6)
+PY_206% = LOC2(P6)
+PZ_206% = LOC3(P6)
+PU_206% = LOC4(P6)
+'读设定点位(P7)
+PX_207% = LOC1(P7)
+PY_207% = LOC2(P7)
+PZ_207% = LOC3(P7)
+PU_207% = LOC4(P7)
+'读设定点位(P8)
+PX_208% = LOC1(P8)
+PY_208% = LOC2(P8)
+PZ_208% = LOC3(P8)
+PU_208% = LOC4(P8)
+'读设定点位(P10)
+PX_210% = LOC1(P10)
+PY_210% = LOC2(P10)
+PZ_210% = LOC3(P10)
+PU_210% = LOC4(P10)
+'P10判定（待机位）
+IF PX_2% > PX_210% - A% & PX_2% < PX_210% + A% & PY_2% > PY_210% - A% & PY_2% < PY_210% + A% & PZ_2% > PZ_210% - A% & PZ_2% < PZ_210% + A% & PU_2% > PU_210% - A% & PU_2% < PU_210% + A% THEN
+   MO1(0) = 1
+ ELSE
+   MO1(0) = 0
+ENDIF
+GOTO *SEND_PLC
+
+[PNT]
+P1=-645.987 -163.404 0.000 237.778 0.000 0.000 1 0 0
+P2=-645.987 -163.404 88.899 237.778 0.000 0.000 1 0 0
+P3=-649.455 386.036 0.000 237.538 0.000 0.000 1 0 0
+P4=-649.455 386.036 89.672 237.538 0.000 0.000 1 0 0
+P5=108.392 303.276 0.000 327.800 0.000 0.000 1 0 0
+P6=108.392 303.276 87.000 327.800 0.000 0.000 1 0 0
+P7=635.105 303.759 0.000 328.410 0.000 0.000 1 0 0
+P8=635.105 303.759 184.448 328.410 0.000 0.000 1 0 0
+P10=-163.157 325.212 0.004 265.500 0.000 0.000 1 0 0
+P29000=-163.166 325.217 0.048 265.500 0.000 0.000 1 0 0
+P29001=635.106 303.756 0.000 328.410 0.000 0.000 1 0 0
+P29998=-305.864 382.150 0.016 225.311 0.000 0.000 1 0 0
+P29999=-163.157 325.212 0.004 265.500 0.000 0.000 1 0 0
+
+[PCM]
+PC1=2#包膜工位上
+PC2=2#包膜工位下
+PC3=1#包膜工位上
+PC4=1#包膜工位下
+PC5=贴胶工位中间上
+PC6=贴胶工位中间下
+PC7=下料位上
+PC8=下料位下
+PC10=2#工位到贴胶过渡
+PC29998=程序点位复归过度
+
+[PRM]
+'C1:V1.57,R0311-V1.001-V1.13,R0019/V1.13,R0019
+'C1:340,L,I,2.1MB,00-04-C6-15-05-92
+'C1:DIO_NS,V1.02////
+'PRM(0)
+\CNTTYP\
+C1=340
+\YCEADR\
+C1=0
+\DRVASGN\
+R1A=101,102,103,104,0,0
+R2A=0,0,0,0,0,0
+R3A=0,0,0,0,0,0
+R4A=0,0,0,0,0,0
+\RBTNUM\
+R1=2126
+\AXSNUM\
+R1A=2126,2126,2126,2126
+\ATTRIB\
+R1A=0,0,0,0
+\STACK\
+R1A=0,1,2,3
+\CORDAT\
+R1A=1,2,3,4
+'PRM(1)
+/INCMOD/
+RC=0
+/MOVIMD/
+RC=0
+/MOVTMD/
+RC=0
+/SRVOON/
+RC=0
+/SEQFLG/
+RC=0
+#SAFEMODE#
+RC=-1
+/RUNINOIC/
+RC=0
+/RSTATRUN/
+RC=0
+/RSTATBOT/
+RC=0
+/CRNTPG/
+RC=1
+/MAINPG/
+RC=0
+/STDPRN/
+RC=1
+#EMGTIM#
+RC=1000
+#EMGTIM2#
+RC=300
+/DBGSTAMD/
+RC=0
+/BRKSTPMD/
+RC=1
+/SFTONACO/
+RC=1
+/SFTONCRD/
+RC=3
+'PRM(2)
+/WEIGHT/
+R1=20
+/ORGORD/
+R1=312456
+/RORIEN/
+R1=0
+/ARMTYP/
+R1=1
+#CPVMAX#
+R1=1600
+#CPACCL#
+R1=6000
+/CPACRAT/
+R1=100
+#CPCMPCRV#
+R1=12
+#CPCMPVL#
+R1=1000
+#ZONCTRL#
+R1=1
+/SCRINR/
+R1=0
+#SCRACC#
+R1=37
+#SCRVEL#
+R1=80
+#MINRAD#
+R1=5000
+#CERAD1#
+R1=30000
+#CERAD2#
+R1=5000
+#SPLMT1#
+R1=10
+#SPLMT2#
+R1=1
+#CSTMRBT#
+R1=0
+\ASPEED\
+R1=70
+'PRM(3)
+/PLMT+/
+R1A=473316,546134,327680,819200
+/PLMT-/
+R1A=-473316,-546134,-820,-859200
+/ACCEL/
+R1A=100,100,100,100
+/DECRAT/
+R1A=100,100,100,100
+/AXSTIP/
+R1A=0,0,0,0
+/TOLE/
+R1A=80,80,80,80
+/OUTPOS/
+R1A=2000,2000,2000,2000
+/CONTPLS/
+R1A=0,0,0,0
+/ARCHP1/
+R1A=9999999,9999999,9999999,9999999
+/ARCHP2/
+R1A=9999999,9999999,9999999,9999999
+/PSHSPD/
+R1A=10,10,10,10
+/PSHFRC/
+R1A=100,100,100,100
+/PSHTIME/
+R1A=1000,1000,1000,1000
+/PSHJGSP/
+R1A=0,0,0,0
+/PSHMTD/
+R1A=0,0,0,0
+/MANACC/
+R1A=100,100,100,100
+/ORGVEL1/
+R1A=200,200,200,200
+/ORGVEL2/
+R1A=50,50,50,50
+/ORGMVS/
+R1A=20,20,20,20
+/ORGMVP/
+R1A=0,0,0,0
+/ORGSFT/
+R1A=0,0,0,0
+/DOFSET/
+R1A=0,0,0,0
+/ORGMTD/
+R1A=1,1,2,1
+/ORGDIR/
+R1A=0,0,0,0
+/MOTDIR/
+R1A=0,0,1,1
+/SABSRCH/
+R1A=0,0,0,0
+/ARMLEN/
+R1A=400000,400000,0,0
+/OFFSET/
+R1A=-329378,-2184,0,0
+/AXSWEI/
+R1A=0,0,0,0
+'PRM(4)
+#WTHBRK#
+R1A=0,0,1,0
+#LSCLEN#
+R1A=0,0,0,0
+#LSCRNG#
+R1A=0,0,0,0
+#ACCRAD#
+R1A=800,800,2700,3500
+#DECRAD#
+R1A=1100,1100,2250,4200
+#CMPCRV#
+R1A=15,15,14,15
+#CMPVEL#
+R1A=1500,1500,2100,5100
+#ACCPTN#
+R1A=1,1,0,1
+#DECPTN#
+R1A=9,9,0,6
+#VERDIR#
+R1A=0,0,0,0
+#VERACC#
+R1A=0,0,0,0
+#ATLACL#
+R1A=0,0,0,191
+#ATLVCL#
+R1A=0,0,0,0
+#ATLJMR#
+R1A=10,10,10,20
+#ATLVF#
+R1A=0,0,0,0
+#KPPMOV#
+R1A=18,18,18,18
+#KPP#
+R1A=18,18,18,18
+#KPCHTM#
+R1A=0,0,0,0
+#KFF#
+R1A=0,0,0,0
+#KFFLPF#
+R1A=0,0,0,0
+#KHFRQ1#
+R1A=0,0,0,0
+#KHFRQ2#
+R1A=0,0,0,0
+#KVP#
+R1A=9000,6600,4500,5100
+#KVI#
+R1A=9000,6600,4500,5100
+#KVRHLD#
+R1A=100,100,100,100
+#KVRPOS#
+R1A=100,100,100,100
+#KVCHTM#
+R1A=0,0,0,0
+#AL2DOF#
+R1A=0,0,0,0
+#KVLLMT#
+R1A=50,50,80,80
+#KVRESV#
+R1A=0,0,0,0
+#KVREEV#
+R1A=1500,2000,1900,3000
+#TRQFRQ#
+R1A=100,100,100,100
+#TFRQHLD#
+R1A=100,100,100,100
+#MF1TYP#
+R1A=0,0,0,0
+#MF1FRQ1#
+R1A=0,0,0,0
+#MF1FRQ2#
+R1A=0,0,0,0
+#MF2TYP#
+R1A=0,0,0,0
+#MF2FRQ1#
+R1A=0,0,0,0
+#MF2FRQ2#
+R1A=0,0,0,0
+#MF3TYP#
+R1A=0,0,0,0
+#MF3FRQ1#
+R1A=0,0,0,0
+#MF3FRQ2#
+R1A=0,0,0,0
+#MF4TYP#
+R1A=0,0,0,0
+#MF4FRQ1#
+R1A=0,0,0,0
+#MF4FRQ2#
+R1A=0,0,0,0
+#OBSNMI#
+R1A=0,0,0,0
+#OBSGIN#
+R1A=0,0,0,0
+#OBSFF1#
+R1A=0,0,0,0
+#OBSFF2#
+R1A=0,0,0,0
+#KIP#
+R1A=41,32,69,30
+#KII#
+R1A=28,22,31,24
+#KIF#
+R1A=5,5,5,5
+#KILLMT#
+R1A=100,100,100,100
+#KIRESV#
+R1A=0,0,0,0
+#KIREEV#
+R1A=0,0,0,0
+#VELLMT#
+R1A=5500,6500,5000,7650
+#CRFSTD#
+R1A=559,530,382,311
+#CRFLMT#
+R1A=1357,1098,1008,488
+#LEAD#
+R1A=360000,360000,20000,360000
+#GEAR#
+R1A=80000,80000,1000,50000
+#NMOTOR#
+R1A=316,315,313,347
+#MTRTYP#
+R1A=0,0,0,0
+#ENCTYP#
+R1A=0,0,0,0
+#ENCPLS#
+R1A=16384,16384,16384,16384
+#MPTYPE#
+R1A=0,0,0,0
+#MPPTCH#
+R1A=4096,4096,4096,4096
+#IS#
+R1A=560,530,380,320
+#IP#
+R1A=1650,1470,1120,870
+#KT#
+R1A=440,270,340,230
+#RP#
+R1A=33,27,77,60
+#LP#
+R1A=16,13,27,25
+#JM#
+R1A=1090,610,640,810
+#CTTYPE#
+R1A=2,2,2,1
+#PWMFRQ#
+R1A=13,13,13,13
+#IDLIMT#
+R1A=33,0,0,0
+#IDSTVL#
+R1A=4200,6500,4400,7200
+#IDEDVL#
+R1A=5500,0,0,0
+#ORGACC#
+R1A=100,100,100,100
+#ORGCUR#
+R1A=1117,820,492,488
+#ORGDVEL#
+R1A=20,20,20,20
+#ORGTIM#
+R1A=200,200,200,200
+#ORGRTP#
+R1A=4,4,1,4
+#ORGPHS#
+R1A=0,0,0,0
+#DOGLEN#
+R1A=200000,200000,200000,200000
+#POLSFT#
+R1A=0,0,0,0
+#POLLVL#
+R1A=0,0,0,0
+#EMGMOD#
+R1A=1,1,2,0
+#EMGACC#
+R1A=0,0,1700,0
+#DUALMOD#
+R1A=0,0,0,0
+#DUALDIR#
+R1A=0,0,0,0
+#DUALORG#
+R1A=0,0,0,0
+#DSLVPOS#
+R1A=0,0,0,0
+#KDVP#
+R1A=10,10,10,10
+#KDPP#
+R1A=10,10,10,10
+#KDPHLD#
+R1A=0,0,0,0
+#KDPCHT#
+R1A=0,0,0,0
+#PTPCTRL#
+R1A=0,0,0,0
+#PTPCHG#
+R1A=200,200,200,200
+#RCKPLS#
+R1A=20,20,20,20
+#MINVEL#
+R1A=5,5,5,5
+#PVBRK#
+R1A=0,0,0,0
+#QPBAND#
+R1A=0,0,0,0
+#SRVDTM#
+R1A=100,100,100,100
+#BKDLTM#
+R1A=0,0,0,0
+#BKONTM#
+R1A=0,0,0,0
+#BKOFTM#
+R1A=0,0,0,0
+#MBRKVL#
+R1A=2000,2000,2000,2000
+#MOLCRT#
+R1A=559,530,382,311
+#MOLTIM#
+R1A=300,300,300,300
+#MOLVEL#
+R1A=0,0,0,0
+#MOLMLT#
+R1A=24,21,26,22
+#DOLCRT#
+R1A=2400,2400,2400,1200
+#DOLTIM#
+R1A=10,10,10,10
+#DOLVEL#
+R1A=0,0,0,0
+#DOLMLT#
+R1A=28,28,28,28
+#OVRCRT#
+R1A=1628,1317,1209,814
+#OCWTIM#
+R1A=2,2,2,2
+#CERLVL#
+R1A=814,658,604,407
+#CERTIM#
+R1A=2,2,2,2
+#OVRVEL#
+R1A=6050,7150,5500,8415
+#OVLTIM#
+R1A=2,2,2,2
+#VERLVL#
+R1A=3025,3575,2750,4207
+#VERTIM#
+R1A=3,3,3,3
+#PERLVL#
+R1A=117479,138839,106799,163403
+#PERTIM#
+R1A=3,3,3,3
+#DPERLVL#
+R1A=16384,16384,16384,16384
+#DPERTIM#
+R1A=3,3,3,3
+#COLVEL#
+R1A=5,5,5,5
+#COLTIM#
+R1A=50,50,50,50
+#DRVCTRL#
+R1A=0,0,0,0
+#VLCNMSPD#
+R1A=20,20,20,20
+#VLCNSVL#
+R1A=0,0,0,0
+#MVLCNTRT#
+R1A=0,0,0,0
+#CSTMAXS#
+R1A=0,0,0,0
+'PRM(5)
+/EMGCDO/
+RC=1
+/ERPORT/
+RC=0
+/BTALRM/
+RC=0
+/DIOCAN/
+RC=1
+/RESCDO/
+RC=0
+/DI17MD/
+RC=0
+/IOORGMD/
+RC=0
+/IOORGIN/
+RC=2
+/IOORGOUT/
+RC=0
+/IOSRVOUT/
+RC=0
+'PRM(6)
+/OPTENBL/
+C1O=1,1,1,1
+/DIOID/
+RC=1234
+'PRM(7)
+'PRM(8)
+'PRM(9)
+'PRM(10)
+'PRM(11)
+
+[GEP]
+GP1
+MODE=0
+IPADRS=192.168.1.100
+PORT=50
+EOL=0
+TYPE=0
+
+[ACO]
+AC0=1,3,10,3,20,1
+AC1=1,4,10,3,20,1
+AC2=1,5,10,3,20,1
+AC3=1,6,10,3,20,1
+AC4=1,7,10,3,20,1
+AC5=1,8,10,3,20,1
+AC6=1,1,10,3,20,0
+AC7=1,2,10,3,20,0
+
+[END]
